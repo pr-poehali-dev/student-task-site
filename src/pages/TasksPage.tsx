@@ -5,191 +5,203 @@ interface TasksPageProps {
   onNavigate: (page: string) => void;
 }
 
-const categories = ['Все', 'Алгоритмы', 'SQL', 'Python', 'Математика', 'Логика'];
+type Tool = 'text' | 'tasks' | 'presentation' | 'exam';
 
-const tasks = [
-  { id: 1, title: 'Двоичный поиск', category: 'Алгоритмы', difficulty: 'Лёгкая', solved: true, time: '12 мин', points: 10 },
-  { id: 2, title: 'Сортировка слиянием', category: 'Алгоритмы', difficulty: 'Средняя', solved: true, time: '28 мин', points: 25 },
-  { id: 3, title: 'Динамическое программирование', category: 'Алгоритмы', difficulty: 'Сложная', solved: false, time: null, points: 50 },
-  { id: 4, title: 'JOIN запросы', category: 'SQL', difficulty: 'Лёгкая', solved: true, time: '8 мин', points: 10 },
-  { id: 5, title: 'Оконные функции', category: 'SQL', difficulty: 'Средняя', solved: false, time: null, points: 25 },
-  { id: 6, title: 'Рекурсия в Python', category: 'Python', difficulty: 'Средняя', solved: true, time: '15 мин', points: 25 },
-  { id: 7, title: 'Теория вероятностей', category: 'Математика', difficulty: 'Сложная', solved: false, time: null, points: 50 },
-  { id: 8, title: 'Задача о мосте', category: 'Логика', difficulty: 'Средняя', solved: false, time: null, points: 25 },
-  { id: 9, title: 'Графы: BFS/DFS', category: 'Алгоритмы', difficulty: 'Сложная', solved: false, time: null, points: 50 },
+const tools: { id: Tool; icon: string; label: string; color: string; desc: string }[] = [
+  { id: 'text', icon: '📝', label: 'Текстовые работы', color: 'border-violet-500/30 bg-violet-500/5', desc: 'Рефераты, курсовые, эссе по ГОСТу' },
+  { id: 'tasks', icon: '🧮', label: 'Решение задач', color: 'border-cyan-500/30 bg-cyan-500/5', desc: '160+ предметов, с объяснением' },
+  { id: 'presentation', icon: '🎨', label: 'Презентации', color: 'border-pink-500/30 bg-pink-500/5', desc: 'Слайды по академическим стандартам' },
+  { id: 'exam', icon: '🎓', label: 'Экзамены', color: 'border-amber-500/30 bg-amber-500/5', desc: 'Билеты, повторение, диалог' },
 ];
 
-const difficultyConfig: Record<string, { label: string; color: string }> = {
-  'Лёгкая': { label: 'Лёгкая', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-  'Средняя': { label: 'Средняя', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-  'Сложная': { label: 'Сложная', color: 'text-red-700 bg-red-50 border-red-200' },
-};
+const subjects = ['Математика', 'Физика', 'История', 'Право', 'Экономика', 'Программирование', 'Химия', 'Биология'];
+
+const mockHistory = [
+  { id: 1, tool: 'text', title: 'Курсовая: Влияние цифровизации на экономику', date: '14 мая', status: 'done' },
+  { id: 2, tool: 'tasks', title: 'Задача по теормеху — вращательное движение', date: '13 мая', status: 'done' },
+  { id: 3, tool: 'exam', title: 'Подготовка к экзамену по истории России', date: '12 мая', status: 'done' },
+  { id: 4, tool: 'presentation', title: 'Презентация: Искусственный интеллект в медицине', date: '10 мая', status: 'done' },
+];
+
+const toolIcon: Record<Tool, string> = { text: '📝', tasks: '🧮', presentation: '🎨', exam: '🎓' };
 
 const TasksPage = ({ onNavigate }: TasksPageProps) => {
-  const [activeCategory, setActiveCategory] = useState('Все');
-  const [search, setSearch] = useState('');
-  const [activeTask, setActiveTask] = useState<number | null>(null);
+  const [activeTool, setActiveTool] = useState<Tool>('tasks');
+  const [input, setInput] = useState('');
+  const [subject, setSubject] = useState('Математика');
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
 
-  const filtered = tasks.filter((t) => {
-    const matchCat = activeCategory === 'Все' || t.category === activeCategory;
-    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const placeholders: Record<Tool, string> = {
+    text: 'Напиши тему курсовой работы или вставь задание...',
+    tasks: 'Вставь текст задачи или опиши что нужно решить...',
+    presentation: 'Тема презентации, количество слайдов, цель...',
+    exam: 'Вопрос из билета или тема для повторения...',
+  };
 
-  const solvedCount = tasks.filter((t) => t.solved).length;
-  const totalPoints = tasks.filter((t) => t.solved).reduce((sum, t) => sum + t.points, 0);
+  const handleAsk = () => {
+    if (!input.trim()) return;
+    setIsLoading(true);
+    setResult(null);
+    setTimeout(() => {
+      setIsLoading(false);
+      setResult(
+        activeTool === 'tasks'
+          ? `**Решение задачи:**\n\nДано условие по предмету «${subject}».\n\n1. Анализируем условие задачи\n2. Выбираем подходящий метод решения\n3. Применяем формулы и законы\n4. Получаем результат\n\n**Ответ:** Задача решена. Подробный разбор шагов доступен ниже.\n\n*Это демо-ответ. Подключи подписку для полного ответа AI.*`
+          : activeTool === 'text'
+          ? `**План работы:**\n\nПо теме «${input.slice(0, 40)}...»\n\n1. Введение (актуальность, цели)\n2. Теоретическая часть\n3. Практическая часть\n4. Заключение\n5. Список литературы (15+ источников)\n\n*Это демо-ответ. Подключи подписку для полного текста.*`
+          : `AI обработал твой запрос. Результат готов!\n\n*Это демо-ответ. Подключи подписку для полного ответа.*`
+      );
+    }, 1800);
+  };
 
   return (
-    <div className="min-h-screen bg-background pt-16 font-body">
+    <div className="min-h-screen bg-background pt-16">
       {/* Header */}
-      <div className="bg-primary py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-card/40 border-b border-border py-8 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs uppercase tracking-widest text-accent font-medium">База знаний</span>
-              <h1 className="font-display text-4xl font-semibold text-white mt-2">Задачи</h1>
-              <p className="text-primary-foreground/60 mt-1">Практические задачи для развития навыков</p>
+              <h1 className="text-3xl font-black">AI-инструменты</h1>
+              <p className="text-muted-foreground text-sm mt-1">Выбери инструмент и задай вопрос</p>
             </div>
-            <div className="flex gap-4">
-              <div className="bg-white/10 px-5 py-3 text-center">
-                <div className="font-display text-2xl font-bold text-white">{solvedCount}/{tasks.length}</div>
-                <div className="text-xs text-primary-foreground/60 uppercase tracking-wider mt-0.5">Решено</div>
-              </div>
-              <div className="bg-accent/20 border border-accent/30 px-5 py-3 text-center">
-                <div className="font-display text-2xl font-bold text-white">{totalPoints}</div>
-                <div className="text-xs text-primary-foreground/60 uppercase tracking-wider mt-0.5">Очков</div>
-              </div>
+            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2">
+              <Icon name="Zap" size={14} className="text-amber-400" />
+              <span className="text-xs font-semibold text-amber-400">3 из 5 запросов</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Progress bar */}
-        <div className="mb-8 bg-white border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-foreground">Общий прогресс</span>
-            <span className="text-sm text-muted-foreground">{Math.round((solvedCount / tasks.length) * 100)}%</span>
-          </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-700"
-              style={{ width: `${(solvedCount / tasks.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Поиск задач..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-border pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-primary bg-white"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 text-xs font-medium transition-colors border ${
-                  activeCategory === cat
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Task list */}
-        <div className="space-y-2">
-          {filtered.map((task) => (
-            <div
-              key={task.id}
-              className={`bg-white border transition-all duration-200 cursor-pointer ${
-                activeTask === task.id ? 'border-primary shadow-sm' : 'border-border hover:border-primary/40'
-              }`}
-              onClick={() => setActiveTask(activeTask === task.id ? null : task.id)}
-            >
-              <div className="flex items-center gap-4 p-4">
-                {/* Status */}
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  task.solved ? 'bg-primary border-primary' : 'border-border'
-                }`}>
-                  {task.solved && <Icon name="Check" size={12} className="text-white" />}
-                </div>
-
-                {/* Title */}
-                <div className="flex-1 min-w-0">
-                  <span className={`font-medium text-sm ${task.solved ? 'text-muted-foreground' : 'text-foreground'}`}>
-                    {task.title}
-                  </span>
-                </div>
-
-                {/* Category */}
-                <span className="hidden sm:block text-xs text-muted-foreground bg-secondary px-2 py-1">
-                  {task.category}
-                </span>
-
-                {/* Difficulty */}
-                <span className={`text-xs border px-2 py-1 font-medium ${difficultyConfig[task.difficulty].color}`}>
-                  {task.difficulty}
-                </span>
-
-                {/* Points */}
-                <span className="text-xs font-medium text-accent hidden md:block">+{task.points} очков</span>
-
-                {/* Time */}
-                {task.solved && task.time && (
-                  <span className="text-xs text-muted-foreground hidden lg:flex items-center gap-1">
-                    <Icon name="Clock" size={12} />
-                    {task.time}
-                  </span>
-                )}
-
-                <Icon
-                  name="ChevronDown"
-                  size={16}
-                  className={`text-muted-foreground transition-transform ${activeTask === task.id ? 'rotate-180' : ''}`}
-                />
-              </div>
-
-              {/* Expanded */}
-              {activeTask === task.id && (
-                <div className="border-t border-border px-4 py-5 animate-fade-in">
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    Практическая задача по теме «{task.category}». Оцените свой уровень, решите задачу
-                    и получите подробный разбор решения с объяснением алгоритма.
-                  </p>
-                  <div className="flex gap-3">
-                    <button className="bg-primary text-white px-5 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
-                      {task.solved ? 'Решить снова' : 'Решить задачу'}
-                    </button>
-                    {task.solved && (
-                      <button className="border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors">
-                        Посмотреть решение
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left: Tool selector + Input */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Tool tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {tools.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setActiveTool(t.id); setResult(null); setInput(''); }}
+                  className={`rounded-xl border p-3 text-left transition-all ${
+                    activeTool === t.id ? t.color : 'border-border bg-card hover:border-border/80'
+                  }`}
+                >
+                  <div className="text-xl mb-1">{t.icon}</div>
+                  <div className="text-xs font-semibold leading-tight">{t.label}</div>
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {filtered.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <Icon name="Search" size={32} className="mx-auto mb-3 opacity-30" />
-            <p>Задачи не найдены</p>
+            {/* Subject select (for tasks) */}
+            {activeTool === 'tasks' && (
+              <div className="flex flex-wrap gap-2">
+                {subjects.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSubject(s)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                      subject === s
+                        ? 'bg-primary text-white'
+                        : 'bg-secondary border border-border text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input area */}
+            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={placeholders[activeTool]}
+                rows={5}
+                className="w-full bg-transparent px-5 py-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+              />
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border">
+                <span className="text-xs text-muted-foreground">{input.length} символов</span>
+                <button
+                  onClick={handleAsk}
+                  disabled={!input.trim() || isLoading}
+                  className="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 glow-primary"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      Обрабатываю...
+                    </>
+                  ) : (
+                    <>
+                      Спросить AI
+                      <Icon name="Send" size={14} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Result */}
+            {result && (
+              <div className="bg-card border border-primary/30 rounded-2xl p-6 animate-slide-up">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-primary glow-primary flex items-center justify-center text-white text-xs font-black">S</div>
+                  <span className="text-sm font-semibold">Стади AI</span>
+                  <span className="text-xs text-muted-foreground ml-auto">только что</span>
+                </div>
+                <div className="text-sm text-foreground leading-relaxed whitespace-pre-line">{result}</div>
+                <div className="flex gap-3 mt-5 pt-4 border-t border-border">
+                  <button
+                    onClick={() => onNavigate('pricing')}
+                    className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg glow-primary hover:bg-primary/90"
+                  >
+                    Получить полный ответ
+                  </button>
+                  <button className="border border-border text-xs font-semibold px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground">
+                    Копировать
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Right: History */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-bold mb-3 text-muted-foreground uppercase tracking-wider">История</h3>
+              <div className="space-y-2">
+                {mockHistory.map(h => (
+                  <div key={h.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors cursor-pointer">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-base mt-0.5">{toolIcon[h.tool as Tool]}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{h.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{h.date}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upgrade nudge */}
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
+              <div className="text-2xl mb-2">⚡</div>
+              <h4 className="font-bold text-sm mb-1">Заканчиваются запросы</h4>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                Осталось 2 запроса на сегодня. Перейди на Про — безлимит.
+              </p>
+              <button
+                onClick={() => onNavigate('pricing')}
+                className="w-full bg-primary text-white text-xs font-bold py-2.5 rounded-xl glow-primary hover:bg-primary/90"
+              >
+                Перейти на Про →
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 30% 12%;
+    --background: 224 20% 6%;
+    --foreground: 220 15% 92%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
+    --card: 224 18% 9%;
+    --card-foreground: 220 15% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
+    --popover: 224 18% 9%;
+    --popover-foreground: 220 15% 92%;
 
-    --primary: 220 55% 22%;
+    --primary: 258 90% 66%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 92%;
-    --secondary-foreground: 220 30% 20%;
+    --secondary: 224 16% 13%;
+    --secondary-foreground: 220 15% 80%;
 
-    --muted: 220 15% 93%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 224 14% 12%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 38 80% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 168 80% 50%;
+    --accent-foreground: 224 20% 6%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 88%;
-    --input: 220 20% 88%;
-    --ring: 220 55% 22%;
+    --border: 224 14% 15%;
+    --input: 224 14% 15%;
+    --ring: 258 90% 66%;
 
-    --radius: 0.25rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 220 30% 14%;
+    --sidebar-background: 224 20% 6%;
     --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 38 80% 50%;
+    --sidebar-primary: 258 90% 66%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 20%;
+    --sidebar-accent: 224 16% 13%;
     --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 25% 20%;
-    --sidebar-ring: 220 55% 45%;
+    --sidebar-border: 224 14% 15%;
+    --sidebar-ring: 258 90% 66%;
   }
 }
 
@@ -49,74 +49,70 @@
   * {
     @apply border-border;
   }
-
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
-    font-family: "Golos Text", sans-serif;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: "Cormorant Garamond", serif;
+    font-family: "Onest", sans-serif;
   }
 }
 
 @layer utilities {
-  .font-display {
-    font-family: "Cormorant Garamond", serif;
+  .glow-primary {
+    box-shadow: 0 0 50px hsl(258 90% 66% / 0.3);
   }
-
-  .font-body {
-    font-family: "Golos Text", sans-serif;
+  .glow-accent {
+    box-shadow: 0 0 40px hsl(168 80% 50% / 0.25);
   }
-
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(258 90% 78%), hsl(168 80% 62%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-mesh {
+    background:
+      radial-gradient(
+        ellipse 70% 60% at 15% 40%,
+        hsl(258 90% 66% / 0.18) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 55% 65% at 85% 65%,
+        hsl(168 80% 50% / 0.12) 0%,
+        transparent 65%
+      ),
+      hsl(224 20% 6%);
+  }
+  .card-glow {
+    @apply transition-all duration-300;
+  }
+  .card-glow:hover {
+    border-color: hsl(258 90% 66% / 0.4);
+    box-shadow: 0 0 30px hsl(258 90% 66% / 0.1);
+    transform: translateY(-3px);
+  }
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
   }
-
   .animate-slide-up {
-    animation: slideUp 0.5s ease-out forwards;
+    animation: slideUp 0.55s ease-out both;
   }
-
-  .animate-stagger-1 {
+  .delay-100 {
     animation-delay: 0.1s;
-    opacity: 0;
   }
-  .animate-stagger-2 {
+  .delay-200 {
     animation-delay: 0.2s;
-    opacity: 0;
   }
-  .animate-stagger-3 {
+  .delay-300 {
     animation-delay: 0.3s;
-    opacity: 0;
   }
-  .animate-stagger-4 {
+  .delay-400 {
     animation-delay: 0.4s;
-    opacity: 0;
   }
-  .animate-stagger-5 {
+  .delay-500 {
     animation-delay: 0.5s;
-    opacity: 0;
-  }
-
-  .nav-link {
-    @apply relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground;
-  }
-
-  .nav-link::after {
-    content: "";
-    @apply absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-300;
-  }
-
-  .nav-link:hover::after,
-  .nav-link.active::after {
-    @apply w-full;
-  }
-
-  .nav-link.active {
-    @apply text-foreground;
   }
 }
 
@@ -128,11 +124,10 @@
     opacity: 1;
   }
 }
-
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(28px);
   }
   to {
     opacity: 1;
@@ -140,17 +135,8 @@
   }
 }
 
-/* Subtle grid background for hero */
-.grid-bg {
-  background-image:
-    linear-gradient(hsl(220 20% 88% / 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(220 20% 88% / 0.5) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: hsl(var(--background));
@@ -158,7 +144,4 @@
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
   border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
 }
