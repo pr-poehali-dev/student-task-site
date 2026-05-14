@@ -31,6 +31,7 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
   const [subject, setSubject] = useState('Математика');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const placeholders: Record<Tool, string> = {
     text: 'Напиши тему курсовой работы или вставь задание...',
@@ -39,20 +40,27 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
     exam: 'Вопрос из билета или тема для повторения...',
   };
 
-  const handleAsk = () => {
+  const AI_URL = 'https://functions.poehali.dev/26db31f2-5d86-4d37-97b6-655351c56659';
+
+  const handleAsk = async () => {
     if (!input.trim()) return;
     setIsLoading(true);
     setResult(null);
-    setTimeout(() => {
+    setError(null);
+    try {
+      const resp = await fetch(AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: activeTool, question: input, subject }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Ошибка сервера');
+      setResult(data.answer);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Что-то пошло не так');
+    } finally {
       setIsLoading(false);
-      setResult(
-        activeTool === 'tasks'
-          ? `**Решение задачи:**\n\nДано условие по предмету «${subject}».\n\n1. Анализируем условие задачи\n2. Выбираем подходящий метод решения\n3. Применяем формулы и законы\n4. Получаем результат\n\n**Ответ:** Задача решена. Подробный разбор шагов доступен ниже.\n\n*Это демо-ответ. Подключи подписку для полного ответа AI.*`
-          : activeTool === 'text'
-          ? `**План работы:**\n\nПо теме «${input.slice(0, 40)}...»\n\n1. Введение (актуальность, цели)\n2. Теоретическая часть\n3. Практическая часть\n4. Заключение\n5. Список литературы (15+ источников)\n\n*Это демо-ответ. Подключи подписку для полного текста.*`
-          : `AI обработал твой запрос. Результат готов!\n\n*Это демо-ответ. Подключи подписку для полного ответа.*`
-      );
-    }, 1800);
+    }
   };
 
   return (
@@ -82,7 +90,7 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
               {tools.map(t => (
                 <button
                   key={t.id}
-                  onClick={() => { setActiveTool(t.id); setResult(null); setInput(''); }}
+                  onClick={() => { setActiveTool(t.id); setResult(null); setInput(''); setError(null); }}
                   className={`rounded-xl border p-3 text-left transition-all ${
                     activeTool === t.id ? t.color : 'border-border bg-card hover:border-border/80'
                   }`}
@@ -143,6 +151,16 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
               </div>
             </div>
 
+            {/* Error */}
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-5 animate-fade-in">
+                <div className="flex items-center gap-2 text-destructive text-sm font-semibold">
+                  <Icon name="AlertCircle" size={16} />
+                  {error}
+                </div>
+              </div>
+            )}
+
             {/* Result */}
             {result && (
               <div className="bg-card border border-primary/30 rounded-2xl p-6 animate-slide-up">
@@ -154,13 +172,17 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
                 <div className="text-sm text-foreground leading-relaxed whitespace-pre-line">{result}</div>
                 <div className="flex gap-3 mt-5 pt-4 border-t border-border">
                   <button
-                    onClick={() => onNavigate('pricing')}
-                    className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg glow-primary hover:bg-primary/90"
+                    onClick={() => navigator.clipboard.writeText(result)}
+                    className="border border-border text-xs font-semibold px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors flex items-center gap-1.5"
                   >
-                    Получить полный ответ
-                  </button>
-                  <button className="border border-border text-xs font-semibold px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground">
+                    <Icon name="Copy" size={12} />
                     Копировать
+                  </button>
+                  <button
+                    onClick={() => { setResult(null); setInput(''); }}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2"
+                  >
+                    Новый запрос
                   </button>
                 </div>
               </div>
@@ -186,19 +208,15 @@ const TasksPage = ({ onNavigate }: TasksPageProps) => {
               </div>
             </div>
 
-            {/* Upgrade nudge */}
+            {/* AI info */}
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
-              <div className="text-2xl mb-2">⚡</div>
-              <h4 className="font-bold text-sm mb-1">Заканчиваются запросы</h4>
-              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                Осталось 2 запроса на сегодня. Перейди на Про — безлимит.
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                <span className="text-xs font-bold text-accent uppercase tracking-wider">Работает на GPT-4o</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Реальный AI отвечает на твои вопросы. Задавай что угодно — от задач по физике до написания эссе.
               </p>
-              <button
-                onClick={() => onNavigate('pricing')}
-                className="w-full bg-primary text-white text-xs font-bold py-2.5 rounded-xl glow-primary hover:bg-primary/90"
-              >
-                Перейти на Про →
-              </button>
             </div>
           </div>
         </div>
